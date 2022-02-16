@@ -4,11 +4,14 @@ import pathlib
 
 max_levels = int(input("Print levels: "))
 
-EXCLUDED = [
+EXCLUDE_DIRS = [
     ".git", "githooks", "docs", "examples", "migrations", "testdata", # not code files
     "mock" # auto generated
 ]
 
+COUNT_EXTENSIONS = [
+    ".go",
+]
 
 class Node:
     def __init__(self, path):
@@ -16,12 +19,12 @@ class Node:
         self.base_path = str(pathlib.Path(path).parent.resolve())
         self.file_name = os.path.basename(path)
         self.isdir = os.path.isdir(self.path)
-        self.is_golang = False if self.isdir else self.path.endswith(".go")
+        self.is_count_extension = not self.isdir and any([self.path.endswith(ext) for ext in COUNT_EXTENSIONS])
         self.children: List['Node'] = []
         self.lines = 0
 
     def count_lines(self) -> int:
-        if not self.isdir and self.is_golang:
+        if not self.isdir and self.is_count_extension:
             self._count_file_lines()
             return self.lines
 
@@ -31,7 +34,7 @@ class Node:
             file_paths = []
             dir_paths = []
             for child_name in child_names:
-                if child_name not in EXCLUDED:
+                if child_name not in EXCLUDE_DIRS:
                     child_path = os.path.join(self.path, child_name)
                     if os.path.isdir(child_path):
                         dir_paths.append(child_path)
@@ -68,7 +71,7 @@ class Node:
         if level > max_depth:
             return
 
-        if self.is_golang:
+        if self.is_count_extension:
             print("| "*level + "  " + f"{self.lines:6.0f} --- {self.file_name}")
         
         if self.isdir:
@@ -83,5 +86,5 @@ root_folder = ""
 root_path = os.getcwd() if not root_folder else os.path.join(os.getcwd(), root_folder)
 root = Node(root_path)
 root.count_lines()
-print("\n"*10)
+print("\n"*2)
 root.print_tree(max_levels)
