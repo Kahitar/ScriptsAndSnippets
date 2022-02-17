@@ -13,13 +13,21 @@ COUNT_EXTENSIONS = [
     ".go",
 ]
 
+EXCLUDE_EXTENSIONS = [
+    "_test.go",
+]
+
 class Node:
     def __init__(self, path):
         self.path = path
         self.base_path = str(pathlib.Path(path).parent.resolve())
         self.file_name = os.path.basename(path)
         self.isdir = os.path.isdir(self.path)
-        self.is_count_extension = not self.isdir and any([self.path.endswith(ext) for ext in COUNT_EXTENSIONS])
+        self.is_count_extension = (
+            not self.isdir
+            and any([self.path.endswith(ext) for ext in COUNT_EXTENSIONS])
+            and not any([self.path.endswith(ext) for ext in EXCLUDE_EXTENSIONS])
+        )
         self.children: List['Node'] = []
         self.lines = 0
 
